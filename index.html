@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Practice along with songs: loop sections, slow down without changing pitch, metronome and count-in." />
+    <title>Practice Player</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎸</text></svg>" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1 class="brand">🎸 Practice Player</h1>
+      <button id="open-btn" class="btn primary" title="Open an audio file (O)">Open song…</button>
+      <span id="file-name" class="file-name"></span>
+      <span class="spacer"></span>
+      <button id="export-btn" class="btn" disabled title="Download sections + settings as a small file to share">Export</button>
+      <button id="import-btn" class="btn" disabled title="Load sections + settings from an exported file">Import</button>
+      <button id="help-btn" class="btn" title="Keyboard shortcuts (?)">⌨ Shortcuts</button>
+      <input id="file-input" type="file" accept="audio/*,.m4a,.aac,.mp3,.wav,.ogg,.oga,.flac,.opus" hidden />
+      <input id="import-input" type="file" accept=".json,application/json" hidden />
+    </header>
+
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+
+    <main>
+      <!-- Shown until a song is loaded -->
+      <section id="empty-state" class="empty-state">
+        <button id="empty-open-btn" class="btn primary huge">Open a song</button>
+        <p>…or drop an audio file anywhere on this page.</p>
+        <p class="muted">.m4a · .aac · .mp3 · .wav · .ogg · .flac — files stay on your computer, nothing is uploaded.</p>
+      </section>
+
+      <section id="player-ui" class="player-ui" hidden>
+        <div class="wave-card">
+          <div id="overview" class="overview"></div>
+          <div id="waveform" class="waveform"></div>
+          <div class="wave-toolbar">
+            <div class="btn-group">
+              <button id="zoom-out-btn" class="btn" title="Zoom out (−)">−</button>
+              <button id="zoom-fit-btn" class="btn" title="Show whole song (0)">Fit</button>
+              <button id="zoom-in-btn" class="btn" title="Zoom in (+)">+</button>
+            </div>
+            <span class="muted hint">Click = jump · Drag = select · Drag a section edge = resize · Ctrl+scroll = zoom</span>
+            <span class="spacer"></span>
+            <span id="selection-info" class="selection-info"></span>
+            <button id="add-section-btn" class="btn accent" disabled title="Make a section from the selection (N)">＋ Add section</button>
+          </div>
+        </div>
+
+        <div class="transport">
+          <button id="start-btn" class="btn big" title="Go to section / song start (Home)">⏮</button>
+          <button id="back-btn" class="btn big" title="Back 2 s (←)">−2s</button>
+          <button id="play-btn" class="btn play" title="Play / pause (Space)">▶</button>
+          <button id="fwd-btn" class="btn big" title="Forward 2 s (→)">+2s</button>
+          <button id="loop-btn" class="btn big toggle" title="Loop the active section or selection (L)">🔁 Loop</button>
+          <div class="time"><span id="time-pos">0:00.0</span><span class="muted"> / </span><span id="time-dur">0:00.0</span></div>
+          <div id="beat-dots" class="beat-dots" aria-hidden="true"></div>
+          <div id="countin-display" class="countin-display" aria-live="off"></div>
+          <div id="loop-info" class="loop-info muted"></div>
+        </div>
+
+        <div class="panels">
+          <section class="panel" id="speed-panel">
+            <h2>Speed</h2>
+            <div class="speed-row">
+              <button id="speed-down-btn" class="btn big" title="Slower (↓)">−</button>
+              <output id="speed-value" class="speed-value">100%</output>
+              <button id="speed-up-btn" class="btn big" title="Faster (↑)">+</button>
+            </div>
+            <input id="speed-slider" type="range" step="0.01" aria-label="Speed" />
+            <div id="speed-presets" class="presets"></div>
+            <div id="speed-progress" class="progress" hidden><div class="bar"></div><span>Preparing slowed audio…</span></div>
+            <p class="muted small">Pitch stays the same.</p>
+          </section>
+
+          <section class="panel" id="metronome-panel">
+            <h2>Metronome &amp; count-in</h2>
+            <div class="field-row">
+              <label>BPM <input id="bpm-input" type="number" min="20" max="400" step="0.1" placeholder="e.g. 120" /></label>
+              <button id="tap-btn" class="btn" title="Tap tempo (T)">Tap</button>
+              <label>Beats/bar <input id="bpb-input" type="number" min="1" max="16" step="1" /></label>
+            </div>
+            <div class="field-row">
+              <label title="Where a downbeat (beat 1) is in the song, in seconds">Beat 1 at <input id="offset-input" type="number" step="0.001" /> s</label>
+            </div>
+            <div class="field-row nudge">
+              <button class="btn" data-nudge="-10">−10ms</button>
+              <button class="btn" data-nudge="-1">−1ms</button>
+              <button class="btn" data-nudge="1">+1ms</button>
+              <button class="btn" data-nudge="10">+10ms</button>
+              <button id="beat-here-btn" class="btn" title="Set beat 1 at the playhead (B)">Beat 1 = playhead</button>
+            </div>
+            <p class="muted small">Tip: pause right on a downbeat and press “Beat 1 = playhead”, then nudge until the grid lines and clicks sit on the beat.</p>
+            <div class="field-row">
+              <button id="metronome-btn" class="btn big toggle" title="Metronome on/off (M)">Metronome</button>
+              <label class="slider-label">Click vol <input id="click-volume" type="range" min="0" max="1" step="0.01" /></label>
+            </div>
+            <div class="field-row">
+              <span>Click tempo:</span>
+              <div class="segmented" role="radiogroup">
+                <button id="follow-speed-btn" class="btn" role="radio" title="Click slows down with the song">Follows song speed</button>
+                <button id="fixed-bpm-btn" class="btn" role="radio" title="Click stays at the typed BPM">Fixed BPM</button>
+              </div>
+            </div>
+            <div class="field-row">
+              <label>Count-in <input id="countin-beats" type="number" min="1" max="16" step="1" /> beats</label>
+            </div>
+            <div class="field-row">
+              <button id="countin-start-btn" class="btn toggle" title="Count-in before playback starts (C)">Before play</button>
+              <button id="countin-repeat-btn" class="btn toggle" title="Count-in before every loop repeat">Before each loop</button>
+            </div>
+            <div class="field-row">
+              <label class="slider-label">Song vol <input id="song-volume" type="range" min="0" max="1" step="0.01" /></label>
+            </div>
+          </section>
+
+          <section class="panel" id="sections-panel">
+            <h2>Sections</h2>
+            <p id="sections-empty" class="muted small">Drag across the waveform to select a part of the song, then press “＋ Add section” (or N).</p>
+            <ol id="sections-list" class="sections-list"></ol>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div id="drop-overlay" class="drop-overlay" hidden>Drop the audio file to open it</div>
+
+    <dialog id="shortcuts-dialog" class="dialog">
+      <h2>Keyboard shortcuts</h2>
+      <table id="shortcuts-table"></table>
+      <form method="dialog"><button class="btn primary">Close</button></form>
+    </dialog>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

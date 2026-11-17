@@ -68,6 +68,7 @@ export class WaveformView {
   private lastUserScroll = 0;
   private theme: CanvasTheme;
   private frame = 0;
+  private mounted = false; // no callbacks until the constructor has finished
 
   constructor(
     private container: HTMLElement,
@@ -86,6 +87,7 @@ export class WaveformView {
     new ResizeObserver(() => this.resize()).observe(container);
     this.resize();
     this.attachEvents();
+    this.mounted = true;
   }
 
   // ------------------------------------------------------------ public API
@@ -192,7 +194,7 @@ export class WaveformView {
 
   private changed(): void {
     this.invalidate();
-    this.cb.onViewChange();
+    if (this.mounted) this.cb.onViewChange();
   }
 
   // ------------------------------------------------------------ drawing
@@ -271,8 +273,6 @@ export class WaveformView {
       g.fillRect(x1 - 1, waveTop, 2, waveH);
     }
 
-    this.drawBeatGrid(waveTop, waveH);
-
     // Waveform: one min/max bar per pixel column
     g.fillStyle = c.wave;
     const secPerPx = 1 / this.pxPerSec;
@@ -284,6 +284,8 @@ export class WaveformView {
       const y1 = mid - lo * (waveH / 2) * 0.95;
       g.fillRect(x, y0, 1, Math.max(1, y1 - y0));
     }
+
+    this.drawBeatGrid(waveTop, waveH);
 
     // Playhead
     const px = this.xOf(this.playhead);

@@ -9,6 +9,8 @@ export function mountWaveformPanel(app: App, focusSectionName: (id: string) => v
   const overview = new Overview($('overview'), {
     onSeek: (t) => app.seek(t),
     onScroll: (t) => view.centerOn(t),
+    onSetView: (start, end) => view.setView(start, end),
+    onZoom: (factor, t) => view.zoomAt(factor, t),
   });
 
   const view = new WaveformView($('waveform'), {

@@ -84,9 +84,16 @@ export function mountShortcuts(c: ShortcutContext): void {
     tr.insertCell().innerHTML = s.keys.map((k) => `<kbd>${k}</kbd>`).join(' ');
     tr.insertCell().textContent = s.label;
   }
-  const extra = table.insertRow();
-  extra.insertCell().innerHTML = '<kbd>Ctrl</kbd>+scroll';
-  extra.insertCell().textContent = 'Zoom the waveform at the mouse';
+  const mouse: [string, string][] = [
+    ['Scroll wheel', 'Zoom the waveform in/out at the mouse'],
+    ['<kbd>Shift</kbd>+scroll / middle-drag', 'Pan the waveform left/right'],
+    ['Overview strip', 'Drag the box edges to zoom, drag the box to pan, click to jump'],
+  ];
+  for (const [keys, label] of mouse) {
+    const tr = table.insertRow();
+    tr.insertCell().innerHTML = keys;
+    tr.insertCell().textContent = label;
+  }
 }
 
 function isTyping(target: EventTarget | null): boolean {

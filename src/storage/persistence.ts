@@ -40,6 +40,16 @@ export function saveGlobalSettings(g: GlobalSettings): void {
   writeJson(GLOBAL_KEY, g);
 }
 
+/** Small UI preferences (e.g. which panels are open), stored per browser. */
+export function loadUiFlag(name: string, fallback: boolean): boolean {
+  const v = readJson(`${STORAGE_PREFIX}ui:${name}`);
+  return typeof v === 'boolean' ? v : fallback;
+}
+
+export function saveUiFlag(name: string, value: boolean): void {
+  writeJson(`${STORAGE_PREFIX}ui:${name}`, value);
+}
+
 function readJson(key: string): unknown {
   try {
     const s = localStorage.getItem(key);

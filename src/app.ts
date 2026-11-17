@@ -56,6 +56,18 @@ export class App {
     this.store.subscribe((s, prev) => this.scheduleSave(s, prev));
   }
 
+  private needBpmListeners = new Set<() => void>();
+
+  /** UI hook: called when an action needs a BPM that hasn't been entered yet. */
+  onNeedBpm(fn: () => void): void {
+    this.needBpmListeners.add(fn);
+  }
+
+  private needBpm(): void {
+    this.setStatus('Type the song’s BPM first (Metronome & count-in panel).', 'error');
+    for (const fn of this.needBpmListeners) fn();
+  }
+
   /** UI hook: called when a new song's audio is loaded. */
   onAudioLoaded(fn: (buffer: AudioBuffer | null) => void): void {
     this.audioListeners.add(fn);
@@ -205,7 +217,7 @@ export class App {
   toggleMetronome(): void {
     const st = this.state.data.settings;
     if (!st.bpm) {
-      this.setStatus('Type the song’s BPM first (Metronome panel).', 'error');
+      this.needBpm();
       return;
     }
     this.updateSettings({ metronomeOn: !st.metronomeOn });
@@ -214,7 +226,7 @@ export class App {
   toggleCountIn(): void {
     const st = this.state.data.settings;
     if (!st.bpm) {
-      this.setStatus('Type the song’s BPM first (Metronome panel).', 'error');
+      this.needBpm();
       return;
     }
     this.updateSettings({ countInOnStart: !st.countInOnStart });

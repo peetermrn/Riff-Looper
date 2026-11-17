@@ -9,7 +9,8 @@
  *  - drag             -> select a range (then "Add section")
  *  - drag a section edge (in the label strip or the waveform) -> resize it
  *  - click a section label -> make it the active section
- *  - wheel / trackpad -> scroll; Ctrl/Cmd + wheel -> zoom at the cursor
+ *  - mouse wheel      -> zoom in/out around the mouse (like Premiere / Foxglove)
+ *  - Shift + wheel, horizontal trackpad swipe, middle-button drag -> pan
  */
 import { ZOOM } from '../config';
 import { sectionColor } from '../sections/sections';
@@ -39,11 +40,14 @@ export interface WaveformData {
 const LABEL_H = 22; // height of the section label strip, CSS px
 const EDGE_GRAB_PX = 7;
 const DRAG_THRESHOLD_PX = 4;
+/** Wheel distance (px) that zooms by a factor of e; one mouse-wheel notch (~100 px) ≈ 1.3x. */
+const WHEEL_ZOOM_PX = 380;
 
 type Drag =
   | { kind: 'pending'; x: number; time: number; pointerId: number; inLabels: boolean }
   | { kind: 'select'; anchor: number; pointerId: number }
-  | { kind: 'resize'; id: string; edge: 'start' | 'end'; pointerId: number };
+  | { kind: 'resize'; id: string; edge: 'start' | 'end'; pointerId: number }
+  | { kind: 'pan'; x: number; viewStart: number; pointerId: number };
 
 export class WaveformView {
   readonly canvas: HTMLCanvasElement;
@@ -130,6 +134,19 @@ export class WaveformView {
     this.pxPerSec = this.fitPxPerSec();
     this.viewStart = 0;
     this.changed();
+  }
+
+  /** Show exactly [start, end] (seconds), within the zoom limits. Used by the overview's zoom bar. */
+  setView(start: number, end: number): void {
+    const span = Math.max(end - start, 1e-6);
+    this.pxPerSec = Math.max(this.fitPxPerSec(), Math.min(ZOOM.maxPxPerSec, this.width / span));
+    this.lastUserScroll = performance.now();
+    this.scrollTo(start);
+  }
+
+  /** Zoom by `factor` (>1 = in) keeping `anchorTime` under the same pixel. */
+  zoomAt(factor: number, anchorTime: number): void {
+    this.zoomAround(factor, anchorTime);
   }
 
   /** Scroll so the view starts at `start` seconds. */
@@ -325,6 +342,8 @@ export class WaveformView {
     el.addEventListener('pointerup', (e) => this.onPointerUp(e));
     el.addEventListener('pointercancel', () => (this.drag = null));
     el.addEventListener('wheel', (e) => this.onWheel(e), { passive: false });
+    // Stop the browser's middle-click auto-scroll so middle-drag can pan.
+    el.addEventListener('mousedown', (e) => e.button === 1 && e.preventDefault());
   }
 
   private localX(e: PointerEvent | WheelEvent): number {
@@ -345,8 +364,17 @@ export class WaveformView {
   }
 
   private onPointerDown(e: PointerEvent): void {
-    if (!this.peaks || e.button !== 0) return;
+    if (!this.peaks) return;
     const x = this.localX(e);
+    if (e.button === 1) {
+      // Middle button: grab and pan the view.
+      e.preventDefault(); // no browser auto-scroll
+      this.canvas.setPointerCapture(e.pointerId);
+      this.drag = { kind: 'pan', x, viewStart: this.viewStart, pointerId: e.pointerId };
+      this.canvas.style.cursor = 'grabbing';
+      return;
+    }
+    if (e.button !== 0) return;
     const y = e.clientY - this.canvas.getBoundingClientRect().top;
     this.canvas.setPointerCapture(e.pointerId);
     const edge = this.edgeAt(x);
@@ -368,7 +396,10 @@ export class WaveformView {
       this.drag = { kind: 'select', anchor: d.time, pointerId: d.pointerId };
     }
     const cur = this.drag!;
-    if (cur.kind === 'select') {
+    if (cur.kind === 'pan') {
+      this.lastUserScroll = performance.now();
+      this.scrollTo(cur.viewStart - (x - cur.x) / this.pxPerSec);
+    } else if (cur.kind === 'select') {
       const t = this.timeOf(x);
       this.cb.onSelect({ start: Math.min(cur.anchor, t), end: Math.max(cur.anchor, t) }, false);
     } else if (cur.kind === 'resize') {
@@ -381,7 +412,9 @@ export class WaveformView {
     this.drag = null;
     if (!d) return;
     const x = this.localX(e);
-    if (d.kind === 'pending') {
+    if (d.kind === 'pan') {
+      this.canvas.style.cursor = 'crosshair';
+    } else if (d.kind === 'pending') {
       const section = d.inLabels
         ? this.data.sections.find((s) => d.time >= s.start && d.time <= s.end)
         : undefined;
@@ -402,13 +435,16 @@ export class WaveformView {
     if (!this.peaks) return;
     e.preventDefault();
     const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? this.width : 1; // lines/pages -> px
-    if (e.ctrlKey || e.metaKey) {
-      const factor = Math.exp((-e.deltaY * unit) / 300);
-      this.zoomAround(factor, this.timeOf(this.localX(e)));
+    const dx = e.deltaX * unit;
+    const dy = e.deltaY * unit;
+    // Pan: Shift + wheel (some systems report it as deltaX), or a sideways trackpad swipe.
+    if (e.shiftKey || Math.abs(dx) > Math.abs(dy)) {
+      const amount = Math.abs(dx) > Math.abs(dy) ? dx : dy;
+      this.lastUserScroll = performance.now();
+      this.scrollTo(this.viewStart + amount / this.pxPerSec);
       return;
     }
-    const dx = (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * unit;
-    this.lastUserScroll = performance.now();
-    this.scrollTo(this.viewStart + dx / this.pxPerSec);
+    // Zoom around the mouse: wheel up = zoom in. (Trackpad pinch arrives as Ctrl + wheel: same thing.)
+    this.zoomAround(Math.exp(-dy / WHEEL_ZOOM_PX), this.timeOf(this.localX(e)));
   }
 }

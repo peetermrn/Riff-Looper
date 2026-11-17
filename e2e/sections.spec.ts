@@ -162,10 +162,17 @@ test('speed: slows down without changing pitch; keyboard shortcuts', async ({ pa
   // Song position advances at 70% of real time.
   await page.click('#play-btn');
   await page.waitForTimeout(300);
-  const t0 = await hooks(page, (h) => ({ pos: h.app.player.position, ctx: h.ctxTime() }));
+  // `position` is what you hear (ctx time minus output latency); the browser's latency
+  // estimate can change while playing, so compare against the same corrected clock.
+  const sample = () =>
+    hooks(page, (h) => {
+      const ctx = h.app.player.ctx;
+      return { pos: h.app.player.position, heard: ctx.currentTime - (ctx.outputLatency || ctx.baseLatency || 0) };
+    });
+  const t0 = await sample();
   await page.waitForTimeout(2000);
-  const t1 = await hooks(page, (h) => ({ pos: h.app.player.position, ctx: h.ctxTime() }));
-  expect((t1.pos - t0.pos) / (t1.ctx - t0.ctx)).toBeCloseTo(0.7, 2);
+  const t1 = await sample();
+  expect((t1.pos - t0.pos) / (t1.heard - t0.heard)).toBeCloseTo(0.7, 2);
 
   // Arrow keys change speed in 5% steps; clamped to the configured range.
   await page.keyboard.press('ArrowUp');

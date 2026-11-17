@@ -1,5 +1,6 @@
 /** BPM, beat alignment, metronome, click mode, count-in and volumes. */
 import type { App } from '../app';
+import { loadUiFlag, saveUiFlag } from '../storage/persistence';
 import { $, setInputValue, setToggle } from './dom';
 
 export function mountMetronomePanel(app: App): void {
@@ -9,6 +10,18 @@ export function mountMetronomePanel(app: App): void {
   const countInBeats = $<HTMLInputElement>('countin-beats');
   const clickVol = $<HTMLInputElement>('click-volume');
   const songVol = $<HTMLInputElement>('song-volume');
+
+  // The panel is collapsible and starts closed; remember what the user chose.
+  const panel = $<HTMLDetailsElement>('metronome-panel');
+  panel.open = loadUiFlag('metronomeOpen', false);
+  panel.addEventListener('toggle', () => saveUiFlag('metronomeOpen', panel.open));
+  // 'toggle' fires asynchronously; also save on leaving so a quick reload can't lose it.
+  window.addEventListener('pagehide', () => saveUiFlag('metronomeOpen', panel.open));
+  // e.g. pressing M before a BPM is set: open the panel and put the cursor in the BPM field.
+  app.onNeedBpm(() => {
+    panel.open = true;
+    bpm.focus();
+  });
 
   // Number inputs apply on change (Enter / leaving the field) or valid typing.
   onNumber(bpm, (v) => app.updateSettings({ bpm: v === null ? null : clamp(v, 20, 400) }), true);
@@ -46,11 +59,21 @@ export function mountMetronomePanel(app: App): void {
     $('fixed-bpm-btn').setAttribute('aria-checked', String(!st.clickFollowsSpeed));
     setToggle($('countin-start-btn'), st.countInOnStart);
     setToggle($('countin-repeat-btn'), st.countInOnRepeat);
+    $('metronome-summary').textContent = summary(st);
     const noBpm = !st.bpm;
     for (const id of ['metronome-btn', 'countin-start-btn', 'countin-repeat-btn', 'beat-here-btn']) {
       ($(id) as HTMLButtonElement).disabled = noBpm;
     }
   });
+}
+
+/** One-line summary shown in the header while the panel is closed. */
+function summary(st: App['state']['data']['settings']): string {
+  if (!st.bpm) return 'No BPM set';
+  const parts = [`${st.bpm} BPM`, `${st.beatsPerBar} beats/bar`, st.metronomeOn ? 'click ON' : 'click off'];
+  const ci = [st.countInOnStart && 'play', st.countInOnRepeat && 'each loop'].filter(Boolean);
+  parts.push(ci.length ? `count-in ${st.countInBeats} (${ci.join(', ')})` : 'no count-in');
+  return parts.join(' · ');
 }
 
 function onNumber(input: HTMLInputElement, apply: (v: number | null) => void, allowEmpty = false): void {

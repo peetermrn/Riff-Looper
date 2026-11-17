@@ -88,23 +88,29 @@ The full run takes about 10 minutes, because the timing tests play audio in real
 ## How to use
 
 1. **Open a song**: use the button or drag a file onto the page.
-2. **Sections**: drag across the waveform to select a range, then press **＋ Add section** (or `N`)
+2. **Navigate the waveform** (works like Premiere or Foxglove):
+   - **Scroll wheel** zooms in/out around the mouse pointer.
+   - **Shift+scroll**, a sideways trackpad swipe, or **middle-button drag** pans.
+   - The **overview strip** above it is a zoom bar: drag the edges of its highlighted box to
+     zoom, drag the box to pan, or click elsewhere on the strip to jump there.
+3. **Sections**: drag across the waveform to select a range, then press **＋ Add section** (or `N`)
    and type a name. Rename it in the list. Resize it by dragging its edges on the waveform, or
    by typing the start/end times in the list. Clicking a section (in the list, or its label on
    the waveform) jumps to it.
-3. **Loop**: press **Loop** (`L`) to loop the active section. With no section active, the
+4. **Loop**: press **Loop** (`L`) to loop the active section. With no section active, the
    current selection is looped.
-4. **Speed**: use −/+, the presets or `↑`/`↓`. The pitch stays the same. The first time you pick a
+5. **Speed**: use −/+, the presets or `↑`/`↓`. The pitch stays the same. The first time you pick a
    new speed, the slowed audio takes a moment to prepare (a progress bar shows). The old speed
    keeps playing until it's ready, then switches seamlessly.
-5. **Metronome**:
+6. **Metronome**: open the **Metronome & count-in** panel. It starts closed; while closed,
+   its header shows a one-line summary of the settings.
    1. Type the song's **BPM** (or tap it with **Tap** / `T`).
    2. Line up the beat grid: pause exactly on a downbeat and press **Beat 1 = playhead** (`B`).
    3. Fine-tune with the ±1 ms / ±10 ms buttons until the grid lines on the waveform and the
       clicks sit on the beat.
    4. Turn on **Metronome** (`M`).
    5. Choose whether the click **follows the song speed** or stays at a **fixed BPM**.
-6. **Count-in**: set the number of beats, then enable *Before play* (`C`) and/or *Before each loop*.
+7. **Count-in** (same panel): set the number of beats, then enable *Before play* (`C`) and/or *Before each loop*.
 
 All keyboard shortcuts are listed in the app (**⌨ Shortcuts** or `?`).
 They're defined in one table in `src/ui/shortcuts.ts`.
@@ -230,12 +236,17 @@ place to change each is noted.
 - **Waveform**:
   - Click = jump. Drag = select. Dragging near a section edge = resize.
   - Clicking a section's label = make it active.
-  - Scroll wheel = scroll; Ctrl/Cmd + wheel = zoom at the mouse. Max zoom is 2000 px per
-    second (`ZOOM`).
+  - Scroll wheel = zoom at the mouse (one notch ≈ 1.3×; `WHEEL_ZOOM_PX` in
+    `WaveformView.ts`). Max zoom is 2000 px per second (`ZOOM`).
+  - Shift+scroll, sideways trackpad swipe or middle-drag = pan.
+  - Overview strip = Premiere-style zoom bar.
   - The view follows the playhead while playing, except for 2.5 s after you scroll it yourself.
 - **Keys**: `←`/`→` seek 2 s (Shift: 10 s; `SEEK_STEP`), `↑`/`↓` change speed, `1`–`9` jump to
   sections. Deleting a section asks for confirmation; there is no delete key, to avoid
   accidents.
+- **Metronome & count-in panel**: collapsed by default. Whether it's open is remembered per
+  browser. Pressing `M`/`C` before a BPM is set opens it and puts the cursor in the BPM field.
+  The song volume slider lives in the Speed panel, so it stays visible.
 - **Theme**: dark or light, following the operating system. The main buttons are at least
   56 px tall (Play is 72 px).
 - **Volumes**: linear sliders from 0 to 1.

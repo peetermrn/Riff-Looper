@@ -40,7 +40,7 @@
               <button id="zoom-fit-btn" class="btn" title="Show whole song (0)">Fit</button>
               <button id="zoom-in-btn" class="btn" title="Zoom in (+)">+</button>
             </div>
-            <span class="muted hint">Click = jump · Drag = select · Drag a section edge = resize · Ctrl+scroll = zoom</span>
+            <span class="muted hint">Scroll = zoom · Shift+scroll or middle-drag = pan · Click = jump · Drag = select · Drag a section edge = resize</span>
             <span class="spacer"></span>
             <span id="selection-info" class="selection-info"></span>
             <button id="add-section-btn" class="btn accent" disabled title="Make a section from the selection (N)">＋ Add section</button>
@@ -71,48 +71,53 @@
             <div id="speed-presets" class="presets"></div>
             <div id="speed-progress" class="progress" hidden><div class="bar"></div><span>Preparing slowed audio…</span></div>
             <p class="muted small">Pitch stays the same.</p>
-          </section>
-
-          <section class="panel" id="metronome-panel">
-            <h2>Metronome &amp; count-in</h2>
-            <div class="field-row">
-              <label>BPM <input id="bpm-input" type="number" min="20" max="400" step="0.1" placeholder="e.g. 120" /></label>
-              <button id="tap-btn" class="btn" title="Tap tempo (T)">Tap</button>
-              <label>Beats/bar <input id="bpb-input" type="number" min="1" max="16" step="1" /></label>
-            </div>
-            <div class="field-row">
-              <label title="Where a downbeat (beat 1) is in the song, in seconds">Beat 1 at <input id="offset-input" type="number" step="0.001" /> s</label>
-            </div>
-            <div class="field-row nudge">
-              <button class="btn" data-nudge="-10">−10ms</button>
-              <button class="btn" data-nudge="-1">−1ms</button>
-              <button class="btn" data-nudge="1">+1ms</button>
-              <button class="btn" data-nudge="10">+10ms</button>
-              <button id="beat-here-btn" class="btn" title="Set beat 1 at the playhead (B)">Beat 1 = playhead</button>
-            </div>
-            <p class="muted small">Tip: pause right on a downbeat and press “Beat 1 = playhead”, then nudge until the grid lines and clicks sit on the beat.</p>
-            <div class="field-row">
-              <button id="metronome-btn" class="btn big toggle" title="Metronome on/off (M)">Metronome</button>
-              <label class="slider-label">Click vol <input id="click-volume" type="range" min="0" max="1" step="0.01" /></label>
-            </div>
-            <div class="field-row">
-              <span>Click tempo:</span>
-              <div class="segmented" role="radiogroup">
-                <button id="follow-speed-btn" class="btn" role="radio" title="Click slows down with the song">Follows song speed</button>
-                <button id="fixed-bpm-btn" class="btn" role="radio" title="Click stays at the typed BPM">Fixed BPM</button>
-              </div>
-            </div>
-            <div class="field-row">
-              <label>Count-in <input id="countin-beats" type="number" min="1" max="16" step="1" /> beats</label>
-            </div>
-            <div class="field-row">
-              <button id="countin-start-btn" class="btn toggle" title="Count-in before playback starts (C)">Before play</button>
-              <button id="countin-repeat-btn" class="btn toggle" title="Count-in before every loop repeat">Before each loop</button>
-            </div>
             <div class="field-row">
               <label class="slider-label">Song vol <input id="song-volume" type="range" min="0" max="1" step="0.01" /></label>
             </div>
           </section>
+
+          <details class="panel collapsible" id="metronome-panel">
+            <summary title="Show / hide metronome and count-in settings">
+              <h2>Metronome &amp; count-in</h2>
+              <span id="metronome-summary" class="panel-summary"></span>
+            </summary>
+            <div class="panel-body">
+              <div class="field-row">
+                <label>BPM <input id="bpm-input" type="number" min="20" max="400" step="0.1" placeholder="e.g. 120" /></label>
+                <button id="tap-btn" class="btn" title="Tap tempo (T)">Tap</button>
+                <label>Beats/bar <input id="bpb-input" type="number" min="1" max="16" step="1" /></label>
+              </div>
+              <div class="field-row">
+                <label title="Where a downbeat (beat 1) is in the song, in seconds">Beat 1 at <input id="offset-input" type="number" step="0.001" /> s</label>
+              </div>
+              <div class="field-row nudge">
+                <button class="btn" data-nudge="-10">−10ms</button>
+                <button class="btn" data-nudge="-1">−1ms</button>
+                <button class="btn" data-nudge="1">+1ms</button>
+                <button class="btn" data-nudge="10">+10ms</button>
+                <button id="beat-here-btn" class="btn" title="Set beat 1 at the playhead (B)">Beat 1 = playhead</button>
+              </div>
+              <p class="muted small">Tip: pause right on a downbeat and press “Beat 1 = playhead”, then nudge until the grid lines and clicks sit on the beat.</p>
+              <div class="field-row">
+                <button id="metronome-btn" class="btn big toggle" title="Metronome on/off (M)">Metronome</button>
+                <label class="slider-label">Click vol <input id="click-volume" type="range" min="0" max="1" step="0.01" /></label>
+              </div>
+              <div class="field-row">
+                <span>Click tempo:</span>
+                <div class="segmented" role="radiogroup">
+                  <button id="follow-speed-btn" class="btn" role="radio" title="Click slows down with the song">Follows song speed</button>
+                  <button id="fixed-bpm-btn" class="btn" role="radio" title="Click stays at the typed BPM">Fixed BPM</button>
+                </div>
+              </div>
+              <div class="field-row">
+                <label>Count-in <input id="countin-beats" type="number" min="1" max="16" step="1" /> beats</label>
+              </div>
+              <div class="field-row">
+                <button id="countin-start-btn" class="btn toggle" title="Count-in before playback starts (C)">Before play</button>
+                <button id="countin-repeat-btn" class="btn toggle" title="Count-in before every loop repeat">Before each loop</button>
+              </div>
+            </div>
+          </details>
 
           <section class="panel" id="sections-panel">
             <h2>Sections</h2>

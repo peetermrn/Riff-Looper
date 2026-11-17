@@ -312,6 +312,7 @@ input[type='range'] {
 /* ---------- panels ---------- */
 .panels {
   display: grid;
+  align-items: start;
   grid-template-columns: minmax(240px, 1fr) minmax(320px, 1.4fr) minmax(320px, 1.4fr);
   gap: 14px;
 }
@@ -543,4 +544,44 @@ kbd {
 .btn.toggle.on:hover:not(:disabled),
 .btn[aria-checked='true']:hover:not(:disabled) {
   background: var(--on);
+}
+
+/* Collapsible panel (<details>): the header row stays visible with a one-line summary. */
+.collapsible > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-height: 32px;
+  user-select: none;
+}
+.collapsible > summary::-webkit-details-marker {
+  display: none;
+}
+.collapsible > summary h2 {
+  margin: 0;
+}
+.collapsible > summary h2::before {
+  content: '▸';
+  display: inline-block;
+  width: 1.1em;
+  transition: transform 0.15s;
+}
+.collapsible[open] > summary h2::before {
+  transform: rotate(90deg);
+}
+.collapsible > summary:hover h2 {
+  color: var(--text);
+}
+.panel-summary {
+  font-size: 14px;
+  color: var(--muted);
+}
+.collapsible[open] .panel-summary {
+  display: none;
+}
+.collapsible[open] > summary {
+  margin-bottom: 12px;
 }

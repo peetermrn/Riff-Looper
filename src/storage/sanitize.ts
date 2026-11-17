@@ -10,7 +10,10 @@ export function sanitizeSongData(raw: unknown, songDuration = Infinity): SongDat
   const r = isObj(raw) ? raw : {};
   const settings = sanitizeSettings(r.settings);
   const sections = Array.isArray(r.sections)
-    ? r.sections.map((s) => sanitizeSection(s, songDuration)).filter((s): s is Section => s !== null)
+    ? r.sections
+        .map((s) => sanitizeSection(s, songDuration))
+        .filter((s): s is Section => s !== null)
+        .sort((a, b) => a.start - b.start || a.end - b.end)
     : [];
   const activeSectionId =
     typeof r.activeSectionId === 'string' && sections.some((s) => s.id === r.activeSectionId) ? r.activeSectionId : null;

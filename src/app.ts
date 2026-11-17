@@ -69,6 +69,7 @@ export class App {
 
   async openFile(file: File): Promise<void> {
     const store = this.store;
+    this.flushSave(); // don't lose the last edits of the previous song
     this.player?.pause();
     store.update((s) => ({ ...s, loading: true, status: { message: `Opening “${file.name}”…`, kind: 'info' } }));
     try {

@@ -523,3 +523,24 @@ kbd {
 .slider-label {
   white-space: nowrap;
 }
+/* Coloured buttons keep their colour on hover (just a little brighter). */
+.btn.primary:hover:not(:disabled),
+.btn.accent:hover:not(:disabled),
+.btn.play:hover:not(:disabled),
+.btn.toggle.on:hover:not(:disabled),
+.btn[aria-checked='true']:hover:not(:disabled),
+.presets .btn.on:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+.btn.primary:hover:not(:disabled),
+.btn.play:hover:not(:disabled),
+.presets .btn.on:hover:not(:disabled) {
+  background: var(--primary);
+}
+.btn.accent:hover:not(:disabled) {
+  background: var(--accent);
+}
+.btn.toggle.on:hover:not(:disabled),
+.btn[aria-checked='true']:hover:not(:disabled) {
+  background: var(--on);
+}

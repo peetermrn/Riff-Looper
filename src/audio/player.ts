@@ -164,10 +164,13 @@ export class Player {
 
   async play(): Promise<void> {
     if (!this.source || this.playing) return;
+    if (this.pausedPos >= this.duration - 0.01) this.pausedPos = 0;
     this.playing = true; // set first so a double-press can't start twice
+    this.planStartPos = this.pausedPos; // what `position` reports until audio is scheduled
+    this.timeline = [];
+    this.clickNodes = [];
     await this.ctx.resume();
     if (!this.playing) return; // paused while resuming
-    if (this.pausedPos >= this.duration - 0.01) this.pausedPos = 0;
     this.startPlan(this.pausedPos, this.timing.countInOnStart, this.nextSafeTime());
     this.timer = setInterval(() => this.tick(), SCHEDULER_INTERVAL_MS);
     this.emit();

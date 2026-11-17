@@ -36,13 +36,19 @@ export function mountTransport(app: App): { tick(): void } {
     }
   });
 
+  const timePos = $('time-pos');
+  /** Only touch the DOM when the text actually changes (this runs every frame). */
+  const setText = (el: HTMLElement, text: string) => {
+    if (el.textContent !== text) el.textContent = text;
+  };
+
   /** Called every animation frame. */
   function tick(): void {
     const p = app.player;
     const playing = !!p?.isPlaying;
-    playBtn.textContent = playing ? '❚❚' : '▶';
+    setText(playBtn, playing ? '❚❚' : '▶');
     playBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
-    $('time-pos').textContent = formatTime(p?.position ?? 0);
+    setText(timePos, formatTime(p?.position ?? 0));
 
     const beat = p?.lastBeat ?? null;
     // Light the dot for ~0.15 s after each click.
@@ -51,7 +57,7 @@ export function mountTransport(app: App): { tick(): void } {
       d.classList.toggle('lit', !!beat && beat.beatInBar === i && !!fresh);
       d.classList.toggle('countin', !!beat?.countIn);
     });
-    countIn.textContent = p?.inCountIn && beat ? String(beat.countInNumber) : '';
+    setText(countIn, p?.inCountIn && beat ? String(beat.countInNumber) : '');
   }
 
   return { tick };

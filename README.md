@@ -22,38 +22,11 @@ npm install
 npm run dev          # opens a dev server, usually at http://localhost:5173
 ```
 
-Production build and local preview of exactly what gets deployed:
+Production build (a static site in `dist/`, which any static web host can serve) and a local preview of it:
 
 ```bash
 npm run build        # type-checks, then builds into dist/
 npm run preview      # serves dist/ at http://localhost:4173
-```
-
-## Deploy to Vercel
-
-The project is ready to deploy as is (`vercel.json` is included: Vite framework,
-`npm run build`, output folder `dist`).
-
-**Option A — from GitHub (recommended, auto-deploys on every push)**
-
-1. Create an empty repository on GitHub, then push this project:
-   ```bash
-   git remote add origin https://github.com/<you>/practice-player.git
-   git push -u origin master
-   ```
-2. Go to <https://vercel.com/new>, sign in with GitHub, and **Import** the repository.
-3. Leave the detected settings as they are (Framework: *Vite*, Build command:
-   `npm run build`, Output directory: `dist`). Node.js version: 20.x or 22.x (the default is fine).
-4. Click **Deploy**. After ~1 minute you get a URL like `https://practice-player-xyz.vercel.app`
-   to share with friends. Every later `git push` redeploys automatically.
-
-**Option B — from the command line**
-
-```bash
-npm install -g vercel
-vercel login                 # once
-vercel                       # first run: answer the questions (defaults are fine) -> preview URL
-vercel --prod                # publish to the production URL
 ```
 
 ## Tests
@@ -286,8 +259,20 @@ place to change each is noted.
 - **Background tabs**: Chrome and Firefox don't throttle tabs that are playing audio. If a
   browser did, the 1 s of pre-scheduled audio covers short hiccups, but a long stall could
   glitch.
-- **Hosting**: Vercel serves the 32 MB `ffmpeg-core.wasm` as a normal static file. If a
-  hosting plan ever refuses a file that large, point `FFMPEG_CORE_BASE_URL` (in `config.ts`)
-  at a CDN copy instead.
+- **Hosting**: the build includes the 32 MB `ffmpeg-core.wasm` as a normal static file. If
+  a static host refuses a file that large, point `FFMPEG_CORE_BASE_URL` (in `config.ts`) at
+  a CDN copy instead.
 - **Keyboard layouts**: some shortcut keys (`[`, `]`, `?`) are in different places on
   non-US keyboards. The letter shortcuts work on any layout.
+
+## License
+
+This project is released into the public domain under [The Unlicense](LICENSE): anyone
+may use, copy, modify, publish, sell or distribute it, for any purpose, without asking
+and without crediting anyone.
+
+Third-party packages keep their own licences. Most notably, the fallback decoder
+`@ffmpeg/core` (ffmpeg compiled to WebAssembly) is GPL-2.0-or-later. It isn't part of this
+repository: it's installed by npm and copied into `dist/ffmpeg/` at build time. If you
+publish a build, that one file is GPL software, whose source is available from the
+[ffmpeg.wasm project](https://github.com/ffmpegwasm/ffmpeg.wasm).

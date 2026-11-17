@@ -2,6 +2,7 @@
   "name": "practice-player",
   "private": true,
   "version": "1.0.0",
+  "license": "Unlicense",
   "type": "module",
   "scripts": {
     "predev": "node scripts/copy-ffmpeg-core.mjs",

@@ -3,9 +3,11 @@
  * Only imported (and its ~30 MB core downloaded) when the native decoder fails.
  *
  * The core files are served from our own site under /ffmpeg/ (copied there by
- * scripts/copy-ffmpeg-core.mjs at dev/build time), so no third-party CDN is used.
+ * scripts/copy-ffmpeg-core.mjs at dev/build time), so no third-party CDN is
+ * used. See FFMPEG_CORE_BASE_URL in config.ts.
  */
 import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { FFMPEG_CORE_BASE_URL } from '../../config';
 
 let loading: Promise<FFmpeg> | null = null;
 
@@ -13,7 +15,7 @@ function getFFmpeg(): Promise<FFmpeg> {
   if (!loading) {
     loading = (async () => {
       const ffmpeg = new FFmpeg();
-      const base = new URL('ffmpeg/', document.baseURI).href;
+      const base = new URL(FFMPEG_CORE_BASE_URL, document.baseURI).href;
       await ffmpeg.load({ coreURL: base + 'ffmpeg-core.js', wasmURL: base + 'ffmpeg-core.wasm' });
       return ffmpeg;
     })();

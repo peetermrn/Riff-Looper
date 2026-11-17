@@ -180,3 +180,30 @@ test('loop joins are seamless (continuous tone has no gap or dip)', async ({ pag
   expect(steady.length).toBe(400);
   expect(s.min / s.max).toBeGreaterThan(0.97);
 });
+
+test('changing speed while looping switches seamlessly and stays in sync', async ({ page }) => {
+  const b = await setup(page);
+  await loopSection(page, b + 4 - 0.1, b + 6 - 0.1); // 4 beats
+  await hooks(page, (h) => h.startCapture());
+  await page.click('#play-btn');
+  await page.waitForTimeout(4000);
+  await page.locator('#speed-presets button', { hasText: '80%' }).click(); // while playing
+  await waitForSpeed(page, 0.8);
+  await page.waitForTimeout(8000);
+  await page.click('#play-btn');
+  await hooks(page, (h) => h.stopCapture());
+  const heard = (await hooks(page, (h) => h.captureOnsets())) as { song: number[]; click: number[] };
+
+  const si = intervals(heard.song);
+  // Before the switch beats are 0.5 s apart, after it 0.625 s; nothing outside that range
+  // (a gap or a jump would show up as a longer/shorter interval).
+  for (const d of si) {
+    expect(d).toBeGreaterThan(0.495);
+    expect(d).toBeLessThan(0.635);
+  }
+  expect(si.filter((d) => Math.abs(d - 0.625) < 0.01).length).toBeGreaterThanOrEqual(8);
+  // Metronome stays on the song beats throughout.
+  const off = stats(clickToSongOffsetsMs(heard.click, heard.song));
+  expect(off.max).toBeLessThan(6);
+  expect(off.min).toBeGreaterThan(-6);
+});

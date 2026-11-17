@@ -57,8 +57,13 @@ export const SHORTCUTS: Shortcut[] = [
 
 export function mountShortcuts(c: ShortcutContext): void {
   document.addEventListener('keydown', (e) => {
-    if (isTyping(e.target)) return;
-    if ((e.target as HTMLElement).closest?.('dialog')) return;
+    const target = e.target as HTMLElement;
+    if (isTyping(target)) return;
+    if (target.closest?.('dialog')) return;
+    // Keyboard users: Enter/Space on a focused button presses that button.
+    if ((e.key === 'Enter' || e.key === ' ') && target.closest?.('button, a, summary')) return;
+    // Arrow keys on a focused slider move the slider.
+    if (e.key.startsWith('Arrow') && target instanceof HTMLInputElement && target.type === 'range') return;
     if (e.ctrlKey || e.metaKey || e.altKey) {
       // leave browser shortcuts alone (Ctrl+R, Ctrl+F, ...)
       return;

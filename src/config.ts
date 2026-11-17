@@ -51,3 +51,11 @@ export const SCHEDULER_INTERVAL_MS = 50;
 
 /** Prefix for everything this app stores in localStorage. */
 export const STORAGE_PREFIX = 'practice-player:';
+
+/**
+ * Where the fallback decoder (ffmpeg.wasm core, ~30 MB) is loaded from, relative
+ * to the site. By default it is served by this site itself (copied into
+ * public/ffmpeg/ at build time). Could point to a CDN instead, e.g.
+ * 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm/'.
+ */
+export const FFMPEG_CORE_BASE_URL = 'ffmpeg/';

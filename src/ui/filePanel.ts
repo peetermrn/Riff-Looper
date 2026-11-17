@@ -51,6 +51,7 @@ export function mountFilePanel(app: App): void {
 
   app.store.subscribe((s) => {
     $('file-name').textContent = s.song ? s.song.fileName : '';
+    document.title = s.song ? `${s.song.fileName} – Practice Player` : 'Practice Player';
     $<HTMLButtonElement>('export-btn').disabled = !s.song;
     $<HTMLButtonElement>('import-btn').disabled = !s.song;
     $('empty-state').hidden = !!s.song;

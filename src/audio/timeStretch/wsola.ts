@@ -161,7 +161,8 @@ export function* wsolaStretch(
     // Refine at full resolution around the coarse winner.
     const coarse = best;
     bestScore = -Infinity;
-    for (let s = Math.max(lo, coarse - DEC); s <= Math.min(hi, coarse + DEC); s++) {
+    const half = Math.ceil(DEC / 2) + 1;
+    for (let s = Math.max(lo, coarse - half); s <= Math.min(hi, coarse + half); s++) {
       const score = fullResCorr(input, nominal + s, target, N) - (BIAS * Math.abs(s - preferred)) / SEARCH;
       if (score > bestScore) {
         bestScore = score;
@@ -258,13 +259,13 @@ function segEnergy(sq: Float64Array, start: number, len: number): number {
   return sq[s1] - sq[s0];
 }
 
-/** Same as normCorr but on the full-rate signal (channels summed), every 2nd sample. */
+/** Same as normCorr but on the full-rate signal (channels summed), every 3rd sample. */
 function fullResCorr(input: Float32Array[], a: number, b: number, len: number): number {
   const L = input[0].length;
   let dot = 0;
   let ea = 0;
   let eb = 0;
-  for (let i = 0; i < len; i += 2) {
+  for (let i = 0; i < len; i += 3) {
     const ia = a + i;
     const ib = b + i;
     if (ia < 0 || ib < 0 || ia >= L || ib >= L) continue;
